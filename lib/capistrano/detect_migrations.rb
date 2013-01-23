@@ -26,15 +26,20 @@ module Capistrano
         desc 'check for pending Rails migrations with git'
         namespace :git do
           task :detect_migrations do
-            cdt.validate_git_vars
-            if cdm.pending_migrations?
-              logger.log Logger::IMPORTANT, "Pending migrations!!!"
-              cdm.show_pending_migrations
-          
-              $stdout.puts "Do you want to continue deployment? (Y/N)"
-              unless cdm.approved?
-                logger.log Logger::IMPORTANT, "Aborting deployment!"
-                raise 'aborted deployment'
+            # This is horrible
+            if ARGV.grep(/deploy:migrations/).any?
+              puts 'Migrating, skipping migration detection'
+            else
+              cdt.validate_git_vars
+              if cdm.pending_migrations?
+                logger.log Logger::IMPORTANT, "Pending migrations!!!"
+                cdm.show_pending_migrations
+            
+                $stdout.puts "Do you want to continue deployment? (Y/N)"
+                unless cdm.approved?
+                  logger.log Logger::IMPORTANT, "Aborting deployment!"
+                  raise 'aborted deployment'
+                end
               end
             end
           end
